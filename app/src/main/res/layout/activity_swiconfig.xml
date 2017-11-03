@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="tk.rabidbeaver.swi.SWIConfig">
+
+    <Button
+        android:id="@+id/swi_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Program SWI" />
+    <LinearLayout
+        android:id="@+id/swi_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone" >
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="For each button, press and hold, then while holding, press RECORD, then release. When complete, press SAVE. Keys will generate values from 1 up to 18 inclusive, in the order they were recorded."/>
+        <TextView
+            android:id="@+id/swi_adc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+        <Button
+            android:id="@+id/swi_record"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="RECORD BUTTON" />
+        <TextView
+            android:id="@+id/swi_stored"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+        <Button
+            android:id="@+id/swi_save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SAVE MAPPING" />
+        <Button
+            android:id="@+id/swi_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CANCEL" />
+    </LinearLayout>
+</LinearLayout>
