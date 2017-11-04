@@ -4,6 +4,7 @@ import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -25,6 +26,11 @@ public class SWIConfig extends AppCompatActivity {
     private byte[] adc = {0, 0, 0, 0, 0, 0};
     private String adcStatus = "";
 
+    final byte start_detect[] = {(byte)0xaa, 0x55, 0x02, 0x01, 0x01, 0x02};
+    final byte stop_detect[] = {(byte)0xaa, 0x55, 0x02, 0x01, 0x00, 0x03};
+    final byte clear[] = {(byte)0xaa, 0x55, 0x01, 0x02, 0x03};
+    final byte save[] = {(byte)0xaa, 0x55, 0x01, 0x03, 0x02};
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,6 +47,12 @@ public class SWIConfig extends AppCompatActivity {
             finish();
         }
 
+        try {
+            os.write(stop_detect, 0, 6);
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+
         final Button swistart = (Button)findViewById(R.id.swi_start);
         final Button swirecord = (Button)findViewById(R.id.swi_record);
         final Button swisave = (Button)findViewById(R.id.swi_save);
@@ -48,11 +60,6 @@ public class SWIConfig extends AppCompatActivity {
         final LinearLayout swicontent = (LinearLayout)findViewById(R.id.swi_content);
         final TextView swiadc = (TextView)findViewById(R.id.swi_adc);
         final TextView swistored = (TextView)findViewById(R.id.swi_stored);
-
-        final byte start_detect[] = {(byte)0xaa, 0x55, 0x02, 0x01, 0x01, 0x02};
-        final byte stop_detect[] = {(byte)0xaa, 0x55, 0x02, 0x01, 0x00, 0x03};
-        final byte clear[] = {(byte)0xaa, 0x55, 0x02, 0x02, 0x00};
-        final byte save[] = {(byte)0xaa, 0x55, 0x02, 0x03, 0x01};
 
         swistart.setOnClickListener(new Button.OnClickListener(){
             @Override
@@ -120,18 +127,21 @@ public class SWIConfig extends AppCompatActivity {
             @Override
             public void run() {
                 int len, i;
+                byte b;
                 try {
                     while(true) {
-                        if (is.readByte() != 0xaa) continue;
+                        b = is.readByte();
+                        if (b != (byte)0xaa) continue;
                         if (is.readByte() != 0x55) continue;
                         len = (int)is.readByte();
-                        for (i=0; i<len; i++) adc[i] = is.readByte();
+                        is.readByte();
+                        for (i=0; i<len-1; i++) adc[i] = is.readByte();
 
-                        adcStatus = "KEY 1: ["+adc[0]+", "+adc[2]+", "+adc[4]+"], "
-                                +"KEY2: ["+adc[1]+", "+adc[3]+", "+adc[5]+"]";
+                        adcStatus = "KEY 1: [0x"+Integer.toHexString(0xff&adc[0])+", 0x"+Integer.toHexString(0xff&adc[2])+", 0x"+Integer.toHexString(0xff&adc[4])+"], "
+                                +"KEY2: [0x"+Integer.toHexString(0xff&adc[1])+", 0x"+Integer.toHexString(0xff&adc[3])+", 0x"+Integer.toHexString(0xff&adc[5])+"]";
                         runOnUiThread(new Runnable() {
                             public void run() {
-                                swiadc.setText(adcStatus);
+                                swiadc.setText("ADC"+adcStatus);
                             }
                         });
                     }
