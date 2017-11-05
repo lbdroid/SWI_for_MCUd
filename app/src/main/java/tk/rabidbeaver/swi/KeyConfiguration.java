@@ -32,6 +32,27 @@ public class KeyConfiguration extends AppCompatActivity {
 
     private LinearLayout layout;
 
+    protected void setTitle(String keystring){
+        final String mkeystring = keystring;
+        runOnUiThread(new Runnable() {
+            public void run() {
+                getSupportActionBar().setTitle("Last key pressed: 0x"+mkeystring.substring(mkeystring.length()-2, 2));
+            }
+        });
+    }
+
+    @Override
+    protected void onResume(){
+        super.onResume();
+        if (ButtonService.mButtonService != null) ButtonService.mButtonService.mKeyConfiguration = this;
+    }
+
+    @Override
+    protected void onPause(){
+        if (ButtonService.mButtonService != null) ButtonService.mButtonService.mKeyConfiguration = null;
+        super.onPause();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

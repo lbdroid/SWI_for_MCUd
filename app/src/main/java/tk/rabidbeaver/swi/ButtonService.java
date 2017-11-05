@@ -21,6 +21,7 @@ public class ButtonService extends AccessibilityService {
     DataOutputStream os;
     static ButtonService mButtonService = null;
     SWIConfig mSWIConfig = null;
+    KeyConfiguration mKeyConfiguration = null;
     private String adcStatus = "";
     private byte[] adc = {0, 0, 0, 0, 0, 0};
 
@@ -160,6 +161,11 @@ public class ButtonService extends AccessibilityService {
                                 break;
                             case 0x02:
                                 execKey(adc[0]);
+                                if (mKeyConfiguration != null){
+                                    String keystring = Integer.toHexString(adc[0]);
+                                    while (keystring.length() < 2) keystring = "0"+keystring;
+                                    mKeyConfiguration.setTitle(keystring);
+                                }
                                 break;
                         }
                     }
