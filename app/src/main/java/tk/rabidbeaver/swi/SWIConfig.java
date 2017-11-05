@@ -1,65 +1,33 @@
 package tk.rabidbeaver.swi;
 
-import android.net.LocalSocket;
-import android.net.LocalSocketAddress;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
 public class SWIConfig extends AppCompatActivity {
-    LocalSocket mSocket;
-    DataInputStream is;
-    DataOutputStream os;
-
     private int stored;
     private int[] slots = new int[]{16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 9, 8, 1, 3, 4, 2, 7};
-
-    private byte[] adc = {0, 0, 0, 0, 0, 0};
-    private String adcStatus = "";
-
-    final byte start_detect[] = {(byte)0xaa, 0x55, 0x02, 0x01, 0x01, 0x02};
-    final byte stop_detect[] = {(byte)0xaa, 0x55, 0x02, 0x01, 0x00, 0x03};
-    final byte clear[] = {(byte)0xaa, 0x55, 0x01, 0x02, 0x03};
-    final byte save[] = {(byte)0xaa, 0x55, 0x01, 0x03, 0x02};
+    TextView swiadc;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_swiconfig);
 
-        mSocket = new LocalSocket();
-
-        try {
-            mSocket.connect(new LocalSocketAddress("/dev/car/keys", LocalSocketAddress.Namespace.FILESYSTEM));
-            is = new DataInputStream(mSocket.getInputStream());
-            os = new DataOutputStream(mSocket.getOutputStream());
-        } catch (Exception e){
-            e.printStackTrace();
-            finish();
-        }
-
-        try {
-            os.write(stop_detect, 0, 6);
-        } catch (IOException e){
-            e.printStackTrace();
-        }
-
         final Button swistart = (Button)findViewById(R.id.swi_start);
         final Button swirecord = (Button)findViewById(R.id.swi_record);
         final Button swisave = (Button)findViewById(R.id.swi_save);
         final Button swicancel = (Button)findViewById(R.id.swi_cancel);
         final LinearLayout swicontent = (LinearLayout)findViewById(R.id.swi_content);
-        final TextView swiadc = (TextView)findViewById(R.id.swi_adc);
+        swiadc = (TextView)findViewById(R.id.swi_adc);
         final TextView swistored = (TextView)findViewById(R.id.swi_stored);
+
+        final Button swiassign = (Button)findViewById(R.id.swi_assign);
 
         swistart.setOnClickListener(new Button.OnClickListener(){
             @Override
@@ -69,9 +37,9 @@ public class SWIConfig extends AppCompatActivity {
                 swicontent.setVisibility(View.VISIBLE);
                 swistart.setEnabled(false);
                 try {
-                    os.write(start_detect, 0, 6);
-                    os.write(clear, 0, 5);
-                } catch (IOException e){
+                    ButtonService.mButtonService.os.write(Constants.MCUDCOMMANDS.start_detect, 0, 6);
+                    ButtonService.mButtonService.os.write(Constants.MCUDCOMMANDS.clear, 0, 5);
+                } catch (Exception e){
                     e.printStackTrace();
                 }
                 swiadc.setText("");
@@ -84,8 +52,8 @@ public class SWIConfig extends AppCompatActivity {
                 byte[] keyadc = {(byte)0xaa, 0x55, 0x02, 0x04, (byte)slots[stored], 0x00};
                 keyadc[5] = (byte)((int)keyadc[2] ^ (int)keyadc[3] ^ (int)keyadc[4]);
                 try {
-                    os.write(keyadc, 0, 6);
-                } catch (IOException e){
+                    ButtonService.mButtonService.os.write(keyadc, 0, 6);
+                } catch (Exception e){
                     e.printStackTrace();
                 }
                 stored++;
@@ -98,9 +66,9 @@ public class SWIConfig extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 try {
-                    os.write(save, 0, 5);
-                    os.write(stop_detect, 0, 6);
-                } catch (IOException e){
+                    ButtonService.mButtonService.os.write(Constants.MCUDCOMMANDS.save, 0, 5);
+                    ButtonService.mButtonService.os.write(Constants.MCUDCOMMANDS.stop_detect, 0, 6);
+                } catch (Exception e){
                     e.printStackTrace();
                 }
                 swistart.setEnabled(true);
@@ -113,8 +81,8 @@ public class SWIConfig extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 try {
-                    os.write(stop_detect, 0, 6);
-                } catch (IOException e){
+                    ButtonService.mButtonService.os.write(Constants.MCUDCOMMANDS.stop_detect, 0, 6);
+                } catch (Exception e){
                     e.printStackTrace();
                 }
                 swistart.setEnabled(true);
@@ -123,33 +91,15 @@ public class SWIConfig extends AppCompatActivity {
             }
         });
 
-        new Thread() {
+        swiassign.setOnClickListener(new Button.OnClickListener(){
             @Override
-            public void run() {
-                int len, i;
-                byte b;
-                try {
-                    while(true) {
-                        b = is.readByte();
-                        if (b != (byte)0xaa) continue;
-                        if (is.readByte() != 0x55) continue;
-                        len = (int)is.readByte();
-                        is.readByte();
-                        for (i=0; i<len-1; i++) adc[i] = is.readByte();
-
-                        adcStatus = "KEY 1: [0x"+Integer.toHexString(0xff&adc[0])+", 0x"+Integer.toHexString(0xff&adc[2])+", 0x"+Integer.toHexString(0xff&adc[4])+"], "
-                                +"KEY2: [0x"+Integer.toHexString(0xff&adc[1])+", 0x"+Integer.toHexString(0xff&adc[3])+", 0x"+Integer.toHexString(0xff&adc[5])+"]";
-                        runOnUiThread(new Runnable() {
-                            public void run() {
-                                swiadc.setText("ADC"+adcStatus);
-                            }
-                        });
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            public void onClick(View v){
+                startActivity(new Intent(getApplicationContext(), KeyConfiguration.class));
             }
-        }.start();
+        });
 
+        Intent service = new Intent(this, ButtonService.class);
+        service.setAction("start");
+        startService(service);
     }
 }
