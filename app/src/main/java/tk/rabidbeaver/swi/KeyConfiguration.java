@@ -72,6 +72,12 @@ public class KeyConfiguration extends AppCompatActivity {
             spe.putString(Integer.toString(0x1b), Integer.toString(Constants.ACTIONTYPES.KEYCODE)+Integer.toString(0x03));
             spe.putString(Integer.toString(0x1c), Integer.toString(Constants.ACTIONTYPES.KEYCODE)+Integer.toString(0x04));
             spe.putString(Integer.toString(0x25), Integer.toString(Constants.ACTIONTYPES.KEYCODE)+Integer.toString(0xbb));
+
+            spe.putString(Integer.toString(0x50), Integer.toString(Constants.ACTIONTYPES.KEYCODE)+Integer.toString(0x03)); // HOME
+            spe.putString(Integer.toString(0x51), Integer.toString(Constants.ACTIONTYPES.KEYCODE)+Integer.toString(0x04)); // BACK
+            spe.putString(Integer.toString(0x52), Integer.toString(Constants.ACTIONTYPES.BROADCAST_INTENT)+"tk.rabidbeaver.bd37033controller.MUTE"); // MUTE
+            spe.putString(Integer.toString(0x53), Integer.toString(Constants.ACTIONTYPES.KEYCODE)+Integer.toString(0xbb)); // BAND
+            spe.putString(Integer.toString(0x54), Integer.toString(Constants.ACTIONTYPES.KEYCODE)+Integer.toString(0xbb)); // MEDIA (SRC?)
             spe.commit();
         }
 
